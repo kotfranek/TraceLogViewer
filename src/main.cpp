@@ -5,16 +5,13 @@
 #include "net/Datagram.h"
 
 #include "trace/client/UdpClientThread.h"
+#include "trace/client/LogOutput.h"
 
 #include <iostream>
 
 namespace
 {   
-    /* Trace Server's port */
-    const uint16_t TRACE_SRV_PORT = 55555;
-    
-    /* Maximum time between the Presence Signal (us) */
-    const int64_t TRACE_SRV_PRESENCE_SIGNAL_TIME = 500000;
+
 }
 
 
@@ -33,7 +30,8 @@ private:
     {       
         if ( args.size() == 2U )
         {
-            ::trace::client::UdpClientThread client( args[ 1 ] );
+            ::trace::client::LogOutput output;
+            ::trace::client::UdpClientThread client( args[ 1 ], output );
             client.start();
             
             waitForSignal();

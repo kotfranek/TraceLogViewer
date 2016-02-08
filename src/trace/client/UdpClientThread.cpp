@@ -31,6 +31,7 @@
  */
 
 #include "trace/client/UdpClientThread.h"
+#include "trace/client/LogOutput.h"
 #include <iostream>
 
 namespace
@@ -39,7 +40,25 @@ namespace
     const uint16_t TRACE_SRV_PORT = 55555;
     
     /* Maximum time between the Presence Signal (us) */
-    const int64_t TRACE_SRV_PRESENCE_SIGNAL_TIME = 500000;    
+    const int64_t UDP_SERVER_HEARTBEAT_TIMEOUT = 1000000; 
+    
+    /* UDP Client identification */
+    const ::std::string UDP_CLIENT_HANDSHAKE( "TRACELOG_UDP_CLIENT_HS" );  
+    
+    /* UDP Client Disconnect */
+    const ::std::string UDP_CLIENT_CLOSE( "TRACELOG_UDP_CLIENT_CLOSE" );
+    
+    /* UDP Client Disconnect */
+    const ::std::string UDP_CLIENT_ID( "TRACELOG_UDP_CLIENT_ID" );    
+    
+    /* UDP Server identification */
+    const ::std::string UDP_SERVER_HANDSHAKE( "TRACELOG_UDP_SRV_HS" );    
+    
+    /* UDP Server Heartbeat signal */
+    const ::std::string UDP_SERVER_HEARTBEAT( "TRACELOG_UDP_SRV_HB" );
+    
+    /* UDP Client Disconnect */
+    const ::std::string UDP_SERVER_CLOSE( "TRACELOG_UDP_SRV_CLOSE" );       
 }
 
 namespace trace
@@ -47,8 +66,10 @@ namespace trace
 namespace client
 {
     
-UdpClientThread::UdpClientThread( const ::std::string& ip )
+UdpClientThread::UdpClientThread( const ::std::string& ip, ::trace::client::LogOutput& output )
     : ::sys::AbstractThread( "UdpClient" )
+    , m_output( output )
+    , m_state( State_Disconnected )
     , m_srvAddress( TRACE_SRV_PORT, ip )
     , m_socket()
     , m_timeStamp( 0 )
@@ -60,34 +81,83 @@ void UdpClientThread::run()
 {
     if ( m_socket.open( 55557 ) )
     {
-        m_socket.setTimeouts( 50U, 100U );
+        m_socket.setTimeouts( 50U, 500U );
 
         ::std::cout << "Port opened" << ::std::endl;
         ::net::Datagram outMsg( m_srvAddress );
         ::net::Datagram inMsg;
 
-        outMsg.setContent( "TRACELOG-CLIENT-HELLO" );
-        m_socket.send( outMsg );
-
-        ::sys::StopWatch sw( true );
+        ::sys::StopWatch heartBeatTimer;
 
         while ( !isStopRequested() )
         {
-            if ( m_socket.receive( inMsg ) )
+            switch ( m_state )
             {
-                ::std::string auxStr;
-                inMsg.toString( auxStr );
-                ::std::cout << auxStr << ::std::endl;
-            }
+                case State_Disconnected:
+                {
+                    outMsg.setContent( ::UDP_CLIENT_HANDSHAKE );
+                    m_socket.send( outMsg ); 
+                    
+                    m_state = State_Waiting;
+                }
+                break;
+                
+                case State_Waiting:
+                {
+                    m_state = State_Disconnected;
+                    
+                    if ( m_socket.receive( inMsg ) )
+                    {
+                        ::std::string auxStr;
+                        inMsg.toString( auxStr );
 
-            const int64_t current = sw.elapsed();
-
-            if ( ( current - m_timeStamp ) > TRACE_SRV_PRESENCE_SIGNAL_TIME )
-            {
-                m_timeStamp = current;
-                outMsg.setContent( "TRACELOG-CLIENT-PRESENT" );
-                m_socket.send( outMsg );
-            }
+                        if ( 0 == auxStr.find( ::UDP_SERVER_HANDSHAKE ) )
+                        {
+                            ::std::cout << "RCV: HANDSHAKE" << ::std::endl;
+                            outMsg.setContent( ::UDP_CLIENT_ID + ":Test_v0.1" );
+                            m_socket.send( outMsg ); 
+                            heartBeatTimer.start();
+                            m_state = State_Connected;
+                        }                            
+                    }
+                }
+                break;
+                
+                case State_Connected:
+                {
+                    if ( m_socket.receive( inMsg ) )
+                    {
+                        ::std::string auxStr;
+                        inMsg.toString( auxStr );
+                        
+                        if ( 0 == auxStr.compare( ::UDP_SERVER_HEARTBEAT ) )
+                        {
+                            ::std::cout << "RCV: HB" << ::std::endl;
+                            heartBeatTimer.reStart();
+                        }
+                        else if ( 0 == auxStr.compare( ::UDP_SERVER_CLOSE ) )
+                        {
+                            ::std::cout << "RCV: CLOSE" << ::std::endl;
+                            heartBeatTimer.stop();
+                            m_state = State_Disconnected;
+                        }
+                        else
+                        {
+                            m_output.write( auxStr );
+                        }
+                    }  
+                    else
+                    {
+                        if( heartBeatTimer.elapsed( ::UDP_SERVER_HEARTBEAT_TIMEOUT ) )
+                        {
+                            ::std::cout << "RCV: TIMEOUT DISCONNECT" << ::std::endl;
+                            heartBeatTimer.stop();
+                            m_state = State_Disconnected;
+                        }
+                    }
+                }
+                break;
+            }            
         }
     }
 }

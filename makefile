@@ -20,7 +20,9 @@ CFLAGS = -g -Wall -std=c++11 $(INCPARAMS) $(OPTFLAGS)
 LFLAGS = -Wall $(LIBDIRPARAMS)
 RUNARGS = 
 
-SRCS = src/main.cpp src/trace/client/UdpClientThread.cpp
+SRCS = src/main.cpp 
+SRCS+= src/trace/client/UdpClientThread.cpp
+SRCS+= src/trace/client/LogOutput.cpp
 
 OBJS = $(subst .cpp,.o,$(SRCS))
 

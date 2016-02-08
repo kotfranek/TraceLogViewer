@@ -24,58 +24,34 @@
  */
 
 /* 
- * File:   UdpClientThread.h
+ * File:   LogOutput.h
  * Author: kret
  *
- * Created on February 6, 2016, 11:53 AM
+ * Created on February 6, 2016, 1:33 PM
  */
 
-#ifndef UDPCLIENTTHREAD_H
-#define UDPCLIENTTHREAD_H
+#ifndef LOGOUTPUT_H
+#define LOGOUTPUT_H
 
-#include "sys/AbstractThread.h"
-#include "sys/StopWatch.h"
-#include "net/UdpSocket.h"
-#include "net/Datagram.h"
+#include <string>
 
 namespace trace
 {
     namespace client
     {
-        class LogOutput;
-        class UdpClientThread : public ::sys::AbstractThread
+        class LogOutput 
         {
         public:
+            LogOutput();
             
-            enum State
-            {
-                State_Disconnected,
-                State_Waiting,
-                State_Connected,
-            };
+            void write( const ::std::string& text );
             
-            explicit UdpClientThread( const ::std::string& ip, ::trace::client::LogOutput& output );
+            ~LogOutput();
+        private:
 
-        private:  
-            /* @see ::sys::AbstractThread */
-            virtual void run();
-            
-            /* LogOutput instance */
-            LogOutput& m_output;
-            
-            /* Client state */
-            State m_state;
-
-            /* Trace Server Address */
-            ::net::Address m_srvAddress;
-
-            /* Client UDP Socket */
-            ::net::UdpSocket m_socket;
-
-            /* Client-Present signal timestamp */
-            int64_t m_timeStamp;
         };        
     }
 }
 
-#endif /* UDPCLIENTTHREAD_H */
+#endif /* LOGOUTPUT_H */
+
