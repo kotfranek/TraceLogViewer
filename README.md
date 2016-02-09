@@ -6,9 +6,13 @@ CLI [TraceLog][11] viewer
 - display the TraceLog .log files
 - display the TraceLog UDP backend output
 
-## Dependencies
-Requires the [ESys][10] framework.<br>
-Set the ESYS_PATH environment variable before calling the make.
+## Building TraceLogViewer
+Requires the [ESys][10] framework pre-built and `ESYS_HOME` environment variable
+set to directory containing [ESys][10].
+
+Example:
+
+	$ ESYS_HOME="${HOME}/ESys" make
 
 ## Todo
 - move the code from the TraceLog's examples
