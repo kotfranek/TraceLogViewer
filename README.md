@@ -6,6 +6,13 @@ CLI [TraceLog][11] viewer
 - display the TraceLog .log files
 - display the TraceLog UDP backend output
 
+## Changelog
+### 0.0.2
+- implement the UDP Client side State Machine
+
+### 0.0.1
+- moved code from TraceLog examples
+
 ## Building TraceLogViewer
 Requires the [ESys][10] framework pre-built and `ESYS_HOME` environment variable
 set to directory containing [ESys][10].
@@ -15,7 +22,7 @@ Example:
 	$ ESYS_HOME="${HOME}/ESys" make
 
 ## Todo
-- move the code from the TraceLog's examples
+- implement the LogOutput to handle raw LogEntry objects
 
 Copyright &copy; 2016 [Przemysław Podwapiński][98].<br>
 Distributed under the [Simplified BSD License][99].
