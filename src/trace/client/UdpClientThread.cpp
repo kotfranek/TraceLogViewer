@@ -73,6 +73,8 @@ UdpClientThread::UdpClientThread( const ::std::string& ip, ::trace::client::LogO
     , m_srvAddress( TRACE_SRV_PORT, ip )
     , m_socket()
     , m_timeStamp( 0 )
+    , m_entryCounter( 0U )
+    , m_logDataSize( 0U )
 {
 }
 
@@ -140,9 +142,13 @@ void UdpClientThread::run()
                             ::std::cout << "RCV: CLOSE" << ::std::endl;
                             heartBeatTimer.stop();
                             m_state = State_Disconnected;
+                            sessionClose( false );
                         }
                         else
                         {
+                            ++m_entryCounter;
+                            m_logDataSize += auxStr.size();
+                            
                             m_output.write( auxStr );
                         }
                     }  
@@ -153,6 +159,7 @@ void UdpClientThread::run()
                             ::std::cout << "RCV: TIMEOUT DISCONNECT" << ::std::endl;
                             heartBeatTimer.stop();
                             m_state = State_Disconnected;
+                            sessionClose( true );
                         }
                     }
                 }
@@ -160,6 +167,17 @@ void UdpClientThread::run()
             }            
         }
     }
+}
+
+
+void UdpClientThread::sessionClose( const bool timeout )
+{
+    ::std::cout << "Session closed" << ::std::endl; 
+    ::std::cout << "- reason: \t" << ( timeout ? "Server timeout" : "Server requested stop" ) << ::std::endl; 
+    ::std::cout << "- entries:\t" << m_entryCounter << ::std::endl;
+    ::std::cout << "- overall:\t" << m_logDataSize / 1024U << " kb" << ::std::endl;
+    m_entryCounter = 0U;
+    m_logDataSize = 0U;
 }
 
 }

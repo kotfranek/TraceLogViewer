@@ -60,6 +60,13 @@ namespace trace
             /* @see ::sys::AbstractThread */
             virtual void run();
             
+            
+            /**
+             * Cleanup single Log session
+             * @param timeout reason for close
+             */
+            void sessionClose( const bool timeout );
+            
             /* LogOutput instance */
             LogOutput& m_output;
             
@@ -74,6 +81,12 @@ namespace trace
 
             /* Client-Present signal timestamp */
             int64_t m_timeStamp;
+            
+            /* Session LogEntry counter */
+            uint32_t m_entryCounter;
+            
+            /* Accumulative data size */
+            uint32_t m_logDataSize;
         };        
     }
 }

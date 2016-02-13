@@ -34,9 +34,9 @@ private:
             ::trace::client::UdpClientThread client( args[ 1 ], output );
             client.start();
             
-            waitForSignal();
+            waitForExit();
             
-            ::std::cout << "Signal received. Wait for the Receiver Thread..." << ::std::endl;
+            ::std::cout << "Break-Signal received. Wait for the Receiver Thread..." << ::std::endl;
             
             client.requestStop();
             client.join();
