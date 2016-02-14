@@ -36,6 +36,7 @@
 #include "sys/AbstractThread.h"
 #include "sys/StopWatch.h"
 #include "net/UdpSocket.h"
+#include "net/Address.h"
 #include "net/Datagram.h"
 
 namespace trace
@@ -54,7 +55,7 @@ namespace trace
                 State_Connected,
             };
             
-            explicit UdpClientThread( const ::std::string& ip, ::trace::client::LogOutput& output );
+            explicit UdpClientThread( const ::net::TStringIp& ip, ::trace::client::LogOutput& output );
 
         private:  
             /* @see ::sys::AbstractThread */

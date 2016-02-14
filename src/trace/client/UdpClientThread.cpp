@@ -66,7 +66,7 @@ namespace trace
 namespace client
 {
     
-UdpClientThread::UdpClientThread( const ::std::string& ip, ::trace::client::LogOutput& output )
+UdpClientThread::UdpClientThread( const ::net::TStringIp& ip, ::trace::client::LogOutput& output )
     : ::sys::AbstractThread( "UdpClient" )
     , m_output( output )
     , m_state( State_Disconnected )

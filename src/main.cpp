@@ -31,7 +31,7 @@ private:
         if ( args.size() == 2U )
         {
             ::trace::client::LogOutput output;
-            ::trace::client::UdpClientThread client( args[ 1 ], output );
+            ::trace::client::UdpClientThread client( args[ 1 ].c_str(), output );
             client.start();
             
             waitForExit();
