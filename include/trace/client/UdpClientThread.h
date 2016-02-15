@@ -55,7 +55,7 @@ namespace trace
                 State_Connected,
             };
             
-            explicit UdpClientThread( const ::net::TStringIp& ip, ::trace::client::LogOutput& output );
+            explicit UdpClientThread( const ::net::Address& srvAddress, ::trace::client::LogOutput& output );
 
         private:  
             /* @see ::sys::AbstractThread */
@@ -63,10 +63,17 @@ namespace trace
             
             
             /**
+             * Print the status message
+             * @param 
+             */
+            void printStatus( const char* message) const;
+            
+            
+            /**
              * Cleanup single Log session
              * @param timeout reason for close
              */
-            void sessionClose( const bool timeout );
+            void sessionClose( const bool timeout = false );
             
             /* LogOutput instance */
             LogOutput& m_output;
@@ -79,6 +86,8 @@ namespace trace
 
             /* Client UDP Socket */
             ::net::UdpSocket m_socket;
+            
+            ::esys::TString63 m_servedId;
 
             /* Client-Present signal timestamp */
             int64_t m_timeStamp;

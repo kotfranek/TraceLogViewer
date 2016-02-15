@@ -36,9 +36,6 @@
 
 namespace
 {
-    /* Trace Server's port */
-    const uint16_t TRACE_SRV_PORT = 55555;
-    
     /* Maximum time between the Presence Signal (us) */
     const int64_t UDP_SERVER_HEARTBEAT_TIMEOUT = 1000000; 
     
@@ -50,6 +47,9 @@ namespace
     
     /* UDP Client Disconnect */
     const ::std::string UDP_CLIENT_ID( "TRACELOG_UDP_CLIENT_ID" );    
+    
+    /* UDP Client Name */
+    const ::std::string UDP_CLIENT_NAME( "TraceLogViewer-0.1.0" );      
     
     /* UDP Server identification */
     const ::std::string UDP_SERVER_HANDSHAKE( "TRACELOG_UDP_SRV_HS" );    
@@ -66,12 +66,13 @@ namespace trace
 namespace client
 {
     
-UdpClientThread::UdpClientThread( const ::net::TStringIp& ip, ::trace::client::LogOutput& output )
+UdpClientThread::UdpClientThread( const ::net::Address& srvAddress, ::trace::client::LogOutput& output )
     : ::sys::AbstractThread( "UdpClient" )
     , m_output( output )
     , m_state( State_Disconnected )
-    , m_srvAddress( TRACE_SRV_PORT, ip )
+    , m_srvAddress( srvAddress )
     , m_socket()
+    , m_servedId( "none" )
     , m_timeStamp( 0 )
     , m_entryCounter( 0U )
     , m_logDataSize( 0U )
@@ -83,9 +84,9 @@ void UdpClientThread::run()
 {
     if ( m_socket.open( 55557 ) )
     {
-        m_socket.setTimeouts( 50U, 500U );
+        m_socket.setTimeouts( 50U, 1000U );
 
-        ::std::cout << "Port opened" << ::std::endl;
+        printStatus( "Port opened" );
         ::net::Datagram outMsg( m_srvAddress );
         ::net::Datagram inMsg;
 
@@ -97,6 +98,7 @@ void UdpClientThread::run()
             {
                 case State_Disconnected:
                 {
+                    printStatus( "Waiting for Server..." );
                     outMsg.setContent( ::UDP_CLIENT_HANDSHAKE );
                     m_socket.send( outMsg ); 
                     
@@ -115,9 +117,13 @@ void UdpClientThread::run()
 
                         if ( 0 == auxStr.find( ::UDP_SERVER_HANDSHAKE ) )
                         {
-                            ::std::cout << "RCV: HANDSHAKE" << ::std::endl;
-                            outMsg.setContent( ::UDP_CLIENT_ID + ":Test_v0.1" );
+                            ::std::string srvName = auxStr.substr( ::UDP_SERVER_HANDSHAKE.length() );
+                            printStatus( srvName.c_str() );
+                            m_servedId.assign( srvName.c_str() );
+                            
+                            outMsg.setContent( ::UDP_CLIENT_ID + ::UDP_CLIENT_NAME );
                             m_socket.send( outMsg ); 
+                            
                             heartBeatTimer.start();
                             m_state = State_Connected;
                         }                            
@@ -134,12 +140,11 @@ void UdpClientThread::run()
                         
                         if ( 0 == auxStr.compare( ::UDP_SERVER_HEARTBEAT ) )
                         {
-                            ::std::cout << "RCV: HB" << ::std::endl;
                             heartBeatTimer.reStart();
                         }
                         else if ( 0 == auxStr.compare( ::UDP_SERVER_CLOSE ) )
                         {
-                            ::std::cout << "RCV: CLOSE" << ::std::endl;
+                            printStatus( "Server requested to close..." );
                             heartBeatTimer.stop();
                             m_state = State_Disconnected;
                             sessionClose( false );
@@ -156,7 +161,7 @@ void UdpClientThread::run()
                     {
                         if( heartBeatTimer.elapsed( ::UDP_SERVER_HEARTBEAT_TIMEOUT ) )
                         {
-                            ::std::cout << "RCV: TIMEOUT DISCONNECT" << ::std::endl;
+                            printStatus( "Server timeout. Disconnect..." );
                             heartBeatTimer.stop();
                             m_state = State_Disconnected;
                             sessionClose( true );
@@ -166,18 +171,29 @@ void UdpClientThread::run()
                 break;
             }            
         }
+        
+        if ( m_state == State_Connected )
+        {
+            sessionClose();
+        }
     }
 }
 
 
 void UdpClientThread::sessionClose( const bool timeout )
 {
-    ::std::cout << "Session closed" << ::std::endl; 
+    ::std::cout << "Session '" << m_servedId << "' closed" << ::std::endl; 
     ::std::cout << "- reason: \t" << ( timeout ? "Server timeout" : "Server requested stop" ) << ::std::endl; 
     ::std::cout << "- entries:\t" << m_entryCounter << ::std::endl;
     ::std::cout << "- overall:\t" << m_logDataSize / 1024U << " kb" << ::std::endl;
     m_entryCounter = 0U;
     m_logDataSize = 0U;
+}
+
+
+void UdpClientThread::printStatus( const char* message ) const
+{
+    ::std::cout << "==[UDP]== " << message << ::std::endl;
 }
 
 }
