@@ -83,7 +83,11 @@ private:
                         ++i;
                     }
                     ::printf( "Read %d entries\n", i );
-                }                
+                }  
+                else
+                {
+                    ::printf( "Not able to open file: '%s'\n", fileName.c_str() );
+                }
             }
             else if ( argSwitch == ::CMD_OPEN_UDP )
             {
@@ -92,7 +96,7 @@ private:
                 
                 const ::net::Address serverAddress( port, ipAddr.c_str() );
                
-               printf( "Connect UDP Server on %s...\n", serverAddress.toString().c_str() ); 
+               ::printf( "Connect UDP Server on %s...\n", serverAddress.toString().c_str() ); 
                 
                 ::trace::client::LogOutput output;
                 ::trace::client::UdpClientThread client( serverAddress, output );
