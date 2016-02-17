@@ -8,6 +8,7 @@ CLI [TraceLog][11] viewer
 
 ## Changelog
 ### 0.1.0
+2016-02-17
 - enable the log file reading
 - major fixes for the UDP Client
 - adaptions to modified ESys API
