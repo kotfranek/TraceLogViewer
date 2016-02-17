@@ -7,6 +7,9 @@
 
 #include "trace/client/UdpClientThread.h"
 #include "trace/client/LogOutput.h"
+#include "trace/client/FileReader.h"
+
+#include "trace/entry/LogEntry.h"
 
 #include <iostream>
 
@@ -64,7 +67,23 @@ private:
             if ( argSwitch == ::CMD_OPEN_FILE )
             {
                 const ::std::string& fileName = args[ 2 ];
-                ::printf( "Opening file: '%s'\n", fileName.c_str() );
+                
+                ::trace::client::FileReader fileReader;
+                
+                if ( fileReader.open( fileName.c_str() ) )
+                {
+                    ::trace::entry::LogEntry entry;
+                    ::printf( "Opening file: '%s'\n", fileName.c_str() );
+                    
+                    int i = 0;
+                    
+                    while ( fileReader.readEntry( entry ) )
+                    {
+                        ::printf( "'%s'\n", entry.toString().c_str() );
+                        ++i;
+                    }
+                    ::printf( "Read %d entries\n", i );
+                }                
             }
             else if ( argSwitch == ::CMD_OPEN_UDP )
             {
