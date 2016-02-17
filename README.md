@@ -7,6 +7,11 @@ CLI [TraceLog][11] viewer
 - display the TraceLog UDP backend output
 
 ## Changelog
+### 0.1.0
+- enable the log file reading
+- major fixes for the UDP Client
+- adaptions to modified ESys API
+
 ### 0.0.2
 - implement the UDP Client side State Machine
 
