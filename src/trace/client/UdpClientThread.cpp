@@ -30,35 +30,15 @@
  * Created on February 6, 2016, 11:53 AM
  */
 
+#include "trace/backend/udp/UdpBackEndControl.h"
 #include "trace/client/UdpClientThread.h"
 #include "trace/client/LogOutput.h"
 #include <iostream>
 
 namespace
-{
-    /* Maximum time between the Presence Signal (us) */
-    const int64_t UDP_SERVER_HEARTBEAT_TIMEOUT = 1000000; 
-    
-    /* UDP Client identification */
-    const ::std::string UDP_CLIENT_HANDSHAKE( "TRACELOG_UDP_CLIENT_HS" );  
-    
-    /* UDP Client Disconnect */
-    const ::std::string UDP_CLIENT_CLOSE( "TRACELOG_UDP_CLIENT_CLOSE" );
-    
-    /* UDP Client Disconnect */
-    const ::std::string UDP_CLIENT_ID( "TRACELOG_UDP_CLIENT_ID" );    
-    
+{    
     /* UDP Client Name */
-    const ::std::string UDP_CLIENT_NAME( "TraceLogViewer-0.1.0" );      
-    
-    /* UDP Server identification */
-    const ::std::string UDP_SERVER_HANDSHAKE( "TRACELOG_UDP_SRV_HS" );    
-    
-    /* UDP Server Heartbeat signal */
-    const ::std::string UDP_SERVER_HEARTBEAT( "TRACELOG_UDP_SRV_HB" );
-    
-    /* UDP Client Disconnect */
-    const ::std::string UDP_SERVER_CLOSE( "TRACELOG_UDP_SRV_CLOSE" );       
+    const ::std::string UDP_CLIENT_NAME( "TraceLogViewer-0.1.0" );          
 }
 
 namespace trace
@@ -99,7 +79,7 @@ void UdpClientThread::run()
                 case State_Disconnected:
                 {
                     printStatus( "Waiting for Server..." );
-                    outMsg.setContent( ::UDP_CLIENT_HANDSHAKE );
+                    outMsg.setContent( ::trace::backend::udp::UDP_CLIENT_HANDSHAKE );
                     m_socket.send( outMsg ); 
                     
                     m_state = State_Waiting;
@@ -115,13 +95,13 @@ void UdpClientThread::run()
                         ::std::string auxStr;
                         inMsg.toString( auxStr );
 
-                        if ( 0 == auxStr.find( ::UDP_SERVER_HANDSHAKE ) )
+                        if ( 0 == auxStr.find( ::trace::backend::udp::UDP_SERVER_HANDSHAKE ) )
                         {
-                            ::std::string srvName = auxStr.substr( ::UDP_SERVER_HANDSHAKE.length() );
+                            ::std::string srvName = auxStr.substr( ::trace::backend::udp::UDP_SERVER_HANDSHAKE.length() );
                             printStatus( srvName.c_str() );
                             m_servedId.assign( srvName.c_str() );
                             
-                            outMsg.setContent( ::UDP_CLIENT_ID + ::UDP_CLIENT_NAME );
+                            outMsg.setContent( ::trace::backend::udp::UDP_CLIENT_ID + ::UDP_CLIENT_NAME );
                             m_socket.send( outMsg ); 
                             
                             heartBeatTimer.start();
@@ -138,11 +118,11 @@ void UdpClientThread::run()
                         ::std::string auxStr;
                         inMsg.toString( auxStr );
                         
-                        if ( 0 == auxStr.compare( ::UDP_SERVER_HEARTBEAT ) )
+                        if ( 0 == auxStr.compare( ::trace::backend::udp::UDP_SERVER_HEARTBEAT ) )
                         {
                             heartBeatTimer.reStart();
                         }
-                        else if ( 0 == auxStr.compare( ::UDP_SERVER_CLOSE ) )
+                        else if ( 0 == auxStr.compare( ::trace::backend::udp::UDP_SERVER_CLOSE ) )
                         {
                             printStatus( "Server requested to close..." );
                             heartBeatTimer.stop();
@@ -159,7 +139,7 @@ void UdpClientThread::run()
                     }  
                     else
                     {
-                        if( heartBeatTimer.elapsed( ::UDP_SERVER_HEARTBEAT_TIMEOUT ) )
+                        if( heartBeatTimer.elapsed( ::trace::backend::udp::UDP_SERVER_HEARTBEAT_TIMEOUT ) )
                         {
                             printStatus( "Server timeout. Disconnect..." );
                             heartBeatTimer.stop();
