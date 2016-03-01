@@ -33,7 +33,9 @@
 #include "trace/backend/udp/UdpBackEndControl.h"
 #include "trace/client/UdpClientThread.h"
 #include "trace/client/LogOutput.h"
+
 #include <iostream>
+#include <cstring>
 
 namespace
 {    
@@ -97,7 +99,7 @@ void UdpClientThread::run()
 
                         if ( 0 == auxStr.find( ::trace::backend::udp::UDP_SERVER_HANDSHAKE ) )
                         {
-                            ::std::string srvName = auxStr.substr( ::trace::backend::udp::UDP_SERVER_HANDSHAKE.length() );
+                            ::std::string srvName = auxStr.substr( ::std::strlen( ::trace::backend::udp::UDP_SERVER_HANDSHAKE ) );
                             printStatus( srvName.c_str() );
                             m_servedId.assign( srvName.c_str() );
                             
