@@ -25,7 +25,7 @@ add_executable( tlview
 
 # Demo application: required libraries
 target_link_libraries( tlview
-    tl
+    tlcommon
     esys
 )
 
